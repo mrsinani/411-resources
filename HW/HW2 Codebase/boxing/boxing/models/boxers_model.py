@@ -23,7 +23,6 @@ class Boxer:
         reach (float): The reach of the boxer in an unspecified unit.
         age (int): The age of the boxer.
         weight_class (str, optional): The weight class of the boxer, determined based on weight.
-
     """
 
     id: int
