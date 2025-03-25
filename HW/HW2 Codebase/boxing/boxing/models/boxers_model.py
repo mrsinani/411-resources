@@ -13,16 +13,32 @@ configure_logger(logger)
 
 @dataclass
 class Boxer:
+    """Represents a boxer in the database.
+
+    Attributes:
+        id (int): The unique identifier index for the boxer.
+        name (str): The name of the boxer.
+        weight (int): The weight of the boxer in lbs.
+        height (int): The height of the boxer in an unspecified unit.
+        reach (float): The reach of the boxer in an unspecified unit.
+        age (int): The age of the boxer.
+        weight_class (str, optional): The weight class of the boxer, determined based on weight.
+
+    """
+
     id: int
     name: str
     weight: int
     height: int
     reach: float
     age: int
-    weight_class: str = None
+    weight_class: str
 
-    def __post_init__(self):
-        self.weight_class = get_weight_class(self.weight)  # Automatically assign weight class
+    def __post_init__(self) -> None:
+
+        self.weight_class = get_weight_class(
+            self.weight
+        )  # Automatically assign weight class
 
 
 def create_boxer(name: str, weight: int, height: int, reach: float, age: int) -> None:
@@ -45,10 +61,13 @@ def create_boxer(name: str, weight: int, height: int, reach: float, age: int) ->
             if cursor.fetchone():
                 raise ValueError(f"Boxer with name '{name}' already exists")
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO boxers (name, weight, height, reach, age)
                 VALUES (?, ?, ?, ?, ?)
-            """, (name, weight, height, reach, age))
+            """,
+                (name, weight, height, reach, age),
+            )
 
             conn.commit()
 
@@ -99,16 +118,16 @@ def get_leaderboard(sort_by: str = "wins") -> List[dict[str, Any]]:
         leaderboard = []
         for row in rows:
             boxer = {
-                'id': row[0],
-                'name': row[1],
-                'weight': row[2],
-                'height': row[3],
-                'reach': row[4],
-                'age': row[5],
-                'weight_class': get_weight_class(row[2]),  # Calculate weight class
-                'fights': row[6],
-                'wins': row[7],
-                'win_pct': round(row[8] * 100, 1)  # Convert to percentage
+                "id": row[0],
+                "name": row[1],
+                "weight": row[2],
+                "height": row[3],
+                "reach": row[4],
+                "age": row[5],
+                "weight_class": get_weight_class(row[2]),  # Calculate weight class
+                "fights": row[6],
+                "wins": row[7],
+                "win_pct": round(row[8] * 100, 1),  # Convert to percentage
             }
             leaderboard.append(boxer)
 
@@ -122,17 +141,24 @@ def get_boxer_by_id(boxer_id: int) -> Boxer:
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT id, name, weight, height, reach, age
                 FROM boxers WHERE id = ?
-            """, (boxer_id,))
+            """,
+                (boxer_id,),
+            )
 
             row = cursor.fetchone()
 
             if row:
                 boxer = Boxer(
-                    id=row[0], name=row[1], weight=row[2], height=row[3],
-                    reach=row[4], age=row[5]
+                    id=row[0],
+                    name=row[1],
+                    weight=row[2],
+                    height=row[3],
+                    reach=row[4],
+                    age=row[5],
                 )
                 return boxer
             else:
@@ -146,17 +172,24 @@ def get_boxer_by_name(boxer_name: str) -> Boxer:
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT id, name, weight, height, reach, age
                 FROM boxers WHERE name = ?
-            """, (boxer_name,))
+            """,
+                (boxer_name,),
+            )
 
             row = cursor.fetchone()
 
             if row:
                 boxer = Boxer(
-                    id=row[0], name=row[1], weight=row[2], height=row[3],
-                    reach=row[4], age=row[5]
+                    id=row[0],
+                    name=row[1],
+                    weight=row[2],
+                    height=row[3],
+                    reach=row[4],
+                    age=row[5],
                 )
                 return boxer
             else:
@@ -168,13 +201,13 @@ def get_boxer_by_name(boxer_name: str) -> Boxer:
 
 def get_weight_class(weight: int) -> str:
     if weight >= 203:
-        weight_class = 'HEAVYWEIGHT'
+        weight_class = "HEAVYWEIGHT"
     elif weight >= 166:
-        weight_class = 'MIDDLEWEIGHT'
+        weight_class = "MIDDLEWEIGHT"
     elif weight >= 133:
-        weight_class = 'LIGHTWEIGHT'
+        weight_class = "LIGHTWEIGHT"
     elif weight >= 125:
-        weight_class = 'FEATHERWEIGHT'
+        weight_class = "FEATHERWEIGHT"
     else:
         raise ValueError(f"Invalid weight: {weight}. Weight must be at least 125.")
 
@@ -182,7 +215,7 @@ def get_weight_class(weight: int) -> str:
 
 
 def update_boxer_stats(boxer_id: int, result: str) -> None:
-    if result not in {'win', 'loss'}:
+    if result not in {"win", "loss"}:
         raise ValueError(f"Invalid result: {result}. Expected 'win' or 'loss'.")
 
     try:
@@ -193,10 +226,15 @@ def update_boxer_stats(boxer_id: int, result: str) -> None:
             if cursor.fetchone() is None:
                 raise ValueError(f"Boxer with ID {boxer_id} not found.")
 
-            if result == 'win':
-                cursor.execute("UPDATE boxers SET fights = fights + 1, wins = wins + 1 WHERE id = ?", (boxer_id,))
+            if result == "win":
+                cursor.execute(
+                    "UPDATE boxers SET fights = fights + 1, wins = wins + 1 WHERE id = ?",
+                    (boxer_id,),
+                )
             else:  # result == 'loss'
-                cursor.execute("UPDATE boxers SET fights = fights + 1 WHERE id = ?", (boxer_id,))
+                cursor.execute(
+                    "UPDATE boxers SET fights = fights + 1 WHERE id = ?", (boxer_id,)
+                )
 
             conn.commit()
 
