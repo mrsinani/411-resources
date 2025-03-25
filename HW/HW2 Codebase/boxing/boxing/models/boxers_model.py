@@ -21,7 +21,7 @@ class Boxer:
         weight (int): The weight of the boxer in lbs.
         height (int): The height of the boxer in an unspecified unit.
         reach (float): The reach of the boxer in an unspecified unit.
-        age (int): The age of the boxer.
+        age (int): The age of the boxer in years.
         weight_class (str, optional): The weight class of the boxer, determined based on weight.
     """
 
@@ -34,14 +34,22 @@ class Boxer:
     weight_class: str
 
     def __post_init__(self) -> None:
-
-        self.weight_class = get_weight_class(
+        """Sets the weight class of the boxer."""
+        self.weight_class: str = get_weight_class(
             self.weight
         )  # Automatically assign weight class
 
 
 def create_boxer(name: str, weight: int, height: int, reach: float, age: int) -> None:
+    """Creates instance of a boxer in the database given the parameters are valid and the boxer name is unique.
 
+    Args:
+        name: The name of the boxer.
+        weight: The weight of the boxer in lbs.
+        height: The height of the boxer in an unspecified unit.
+        reach: The reach of the boxer in an unspecifed unit.
+        age: The age of the boxer in years.
+    """
     if weight < 125:
         raise ValueError(f"Invalid weight: {weight}. Must be at least 125.")
     if height <= 0:
