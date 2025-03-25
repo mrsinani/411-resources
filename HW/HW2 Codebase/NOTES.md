@@ -7,7 +7,7 @@ Make sure to follow this standard for the assignment.
 
 ### Non-method functions
 
-```
+```python
 def function_with_pep484_type_annotations(param1: int, param2: str) -> bool:
     """Example function with PEP 484 type annotations.
 
@@ -23,7 +23,7 @@ def function_with_pep484_type_annotations(param1: int, param2: str) -> bool:
 
 ### Classes and their methods
 
-```
+```python
 class ExampleClass(object):
     """The summary line for a class docstring should fit on one line.
 
