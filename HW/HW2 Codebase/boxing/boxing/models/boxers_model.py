@@ -31,7 +31,7 @@ class Boxer:
     height: int
     reach: float
     age: int
-    weight_class: str
+    weight_class: str = ""
 
     def __post_init__(self) -> None:
         """Sets the weight class of the boxer."""
@@ -86,6 +86,11 @@ def create_boxer(name: str, weight: int, height: int, reach: float, age: int) ->
 
 
 def delete_boxer(boxer_id: int) -> None:
+    """Deletes instance of boxer from the database.
+
+    Args:
+        boxer_id: The primary key of the boxer.
+    """
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -102,6 +107,11 @@ def delete_boxer(boxer_id: int) -> None:
 
 
 def get_leaderboard(sort_by: str = "wins") -> List[dict[str, Any]]:
+    """Returns leaderboard  based on a specific sorting filter.
+
+    Args:
+        sort_by: The filter for sorting the leaderboard.
+    """
     query = """
         SELECT id, name, weight, height, reach, age, fights, wins,
                (wins * 1.0 / fights) AS win_pct
@@ -145,6 +155,11 @@ def get_leaderboard(sort_by: str = "wins") -> List[dict[str, Any]]:
 
 
 def get_boxer_by_id(boxer_id: int) -> Boxer:
+    """Returns Boxer object of boxer with specified primary key.
+
+    Args:
+        boxer_id: The primary key used to query database for a specific boxer.
+    """
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -176,6 +191,11 @@ def get_boxer_by_id(boxer_id: int) -> Boxer:
 
 
 def get_boxer_by_name(boxer_name: str) -> Boxer:
+    """Returns Boxer object of boxer with specified name.
+
+    Args:
+        boxer_name: The name used to query the database for a specific boxer.
+    """
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -207,6 +227,11 @@ def get_boxer_by_name(boxer_name: str) -> Boxer:
 
 
 def get_weight_class(weight: int) -> str:
+    """Returns the weight classification of a weight.
+
+    Args:
+        weight: The weight in lbs meant to be classified.
+    """
     if weight >= 203:
         weight_class = "HEAVYWEIGHT"
     elif weight >= 166:
@@ -222,6 +247,12 @@ def get_weight_class(weight: int) -> str:
 
 
 def update_boxer_stats(boxer_id: int, result: str) -> None:
+    """Updates the win/loss statistics of a specified boxer.
+
+    Args:
+        boxer_id: The primary key used to modify a specific boxer in the database.
+        result: Whether or not the boxer won or lost a given fight.
+    """
     if result not in {"win", "loss"}:
         raise ValueError(f"Invalid result: {result}. Expected 'win' or 'loss'.")
 
