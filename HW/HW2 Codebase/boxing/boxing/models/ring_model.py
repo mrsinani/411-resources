@@ -12,10 +12,25 @@ configure_logger(logger)
 
 
 class RingModel:
-    def __init__(self):
+    """Represents a ring where two Boxer objects can fight.
+
+    Attributes:
+        ring (List[Boxer]): A list that can contain two boxers that will be fighting.
+    """
+
+    def __init__(self) -> None:
+        """Initalizes an empty Ring."""
         self.ring: List[Boxer] = []
 
     def fight(self) -> str:
+        """Simulates a fight between the two boxers in the ring.
+
+        Returns:
+            self.name: The name of the winning boxer.
+
+        Raises:
+            ValueError: Fight must be between exactly 2 fighters within the ring.
+        """
         if len(self.ring) < 2:
             raise ValueError("There must be two boxers to start a fight.")
 
@@ -38,21 +53,33 @@ class RingModel:
             winner = boxer_2
             loser = boxer_1
 
-        update_boxer_stats(winner.id, 'win')
-        update_boxer_stats(loser.id, 'loss')
+        update_boxer_stats(winner.id, "win")
+        update_boxer_stats(loser.id, "loss")
 
         self.clear_ring()
 
         return winner.name
 
-    def clear_ring(self):
+    def clear_ring(self) -> None:
+        """Clears out the boxer objects within the ring."""
         if not self.ring:
             return
         self.ring.clear()
 
-    def enter_ring(self, boxer: Boxer):
+    def enter_ring(self, boxer: Boxer) -> None:
+        """Inserts a boxer into the ring if there is space.
+
+        Args:
+            boxer: An Boxer object that will be entered into the ring if possible.
+
+        Raises:
+            TypeError: Any input that is not a single instance of a Boxer or a tuple of Boxers.
+            ValueError: Any inputs that fill ring with more than 2 Boxer objects within the ring at the same time.
+        """
         if not isinstance(boxer, Boxer):
-            raise TypeError(f"Invalid type: Expected 'Boxer', got '{type(boxer).__name__}'")
+            raise TypeError(
+                f"Invalid type: Expected 'Boxer', got '{type(boxer).__name__}'"
+            )
 
         if len(self.ring) >= 2:
             raise ValueError("Ring is full, cannot add more boxers.")
@@ -60,6 +87,11 @@ class RingModel:
         self.ring.append(boxer)
 
     def get_boxers(self) -> List[Boxer]:
+        """Return the boxers that are in the ring, if a ring exists.
+
+        Returns:
+            self.ring: Returns a list of Boxer(s) within the ring.
+        """
         if not self.ring:
             pass
         else:
@@ -68,6 +100,14 @@ class RingModel:
         return self.ring
 
     def get_fighting_skill(self, boxer: Boxer) -> float:
+        """Return the fighting skill of a boxer based on a formula.
+
+        Args:
+            boxer: A Boxer object whose skill will be calculated.
+
+        Returns:
+            skill: A value calculated through the weight of a boxer, their name, their reach, and age.
+        """
         # Arbitrary calculations
         age_modifier = -1 if boxer.age < 25 else (-2 if boxer.age > 35 else 0)
         skill = (boxer.weight * len(boxer.name)) + (boxer.reach / 10) + age_modifier
