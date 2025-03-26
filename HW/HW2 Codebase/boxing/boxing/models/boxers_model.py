@@ -122,10 +122,12 @@ def get_leaderboard(sort_by: str = "wins") -> List[dict[str, Any]]:
     Args:
         sort_by: The filter for sorting the leaderboard.
 
+    Returns:
+        leaderboard: A list of dictionaries, each of which contains boxer statistics from the database.
+
     Raises:
         ValueError: If an invalid sorting parameter is inputted.
         sqlite3.Error: If a database error occurs.
-
     """
     query = """
         SELECT id, name, weight, height, reach, age, fights, wins,
@@ -175,10 +177,12 @@ def get_boxer_by_id(boxer_id: int) -> Boxer:
     Args:
         boxer_id: The primary key used to query database for a specific boxer.
 
+    Returns:
+        boxer: The Boxer object created from database query by id.
+
     Raises:
         ValueError: If boxer of a specified id is not found in database.
         sqlite3.Error: If a database error occurs.
-
     """
     try:
         with get_db_connection() as conn:
@@ -215,6 +219,9 @@ def get_boxer_by_name(boxer_name: str) -> Boxer:
 
     Args:
         boxer_name: The name used to query the database for a specific boxer.
+
+    Returns:
+        boxer: The Boxer object created from database query by id.
 
     Raises:
         ValueError: If boxer of a specified name is not found in database.
@@ -255,6 +262,9 @@ def get_weight_class(weight: int) -> str:
 
     Args:
         weight: The weight in lbs meant to be classified.
+
+    Returns:
+        weight_class: The weight class determined by the weight.
 
     Raises:
         ValueError: If invalid weight is inputted.
