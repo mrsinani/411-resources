@@ -19,7 +19,7 @@ def get_random() -> float:
     """Fetches a random float from random.org.
 
     Returns:
-        float: A random float.
+        random_number: A random float.
 
     Raises:
         RuntimeError: If the request to random.org fails.
