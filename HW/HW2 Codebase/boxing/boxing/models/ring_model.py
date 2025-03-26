@@ -29,7 +29,7 @@ class RingModel:
             self.name: The name of the winning boxer.
 
         Raises:
-            ValueError: Fight must be between exactly 2 fighters within the ring.
+            ValueError: If there are not exactly 2 fighters within the ring.
         """
         if len(self.ring) < 2:
             raise ValueError("There must be two boxers to start a fight.")
@@ -73,8 +73,8 @@ class RingModel:
             boxer: An Boxer object that will be entered into the ring if possible.
 
         Raises:
-            TypeError: Any input that is not a single instance of a Boxer or a tuple of Boxers.
-            ValueError: Any inputs that fill ring with more than 2 Boxer objects within the ring at the same time.
+            TypeError: If input is not a single instance of a Boxer or a tuple of Boxers.
+            ValueError: If input fills ring with more than 2 Boxer objects within the ring at the same time.
         """
         if not isinstance(boxer, Boxer):
             raise TypeError(
