@@ -9,11 +9,22 @@ logger = logging.getLogger(__name__)
 configure_logger(logger)
 
 
-RANDOM_ORG_URL = os.getenv("RANDOM_ORG_URL",
-                           "https://www.random.org/decimal-fractions/?num=1&dec=2&col=1&format=plain&rnd=new")
+RANDOM_ORG_URL = os.getenv(
+    "RANDOM_ORG_URL",
+    "https://www.random.org/decimal-fractions/?num=1&dec=2&col=1&format=plain&rnd=new",
+)
 
 
 def get_random() -> float:
+    """Fetches a random float from random.org.
+
+    Returns:
+        float: A random float.
+
+    Raises:
+        RuntimeError: If the request to random.org fails.
+        ValueError: If the response from random.org is not a valid float.
+    """
     try:
         response = requests.get(RANDOM_ORG_URL, timeout=5)
 
