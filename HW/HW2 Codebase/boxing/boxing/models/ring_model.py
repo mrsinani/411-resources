@@ -26,7 +26,7 @@ class RingModel:
         """Simulates a fight between the two boxers in the ring.
 
         Returns:
-            self.name: The name of the winning boxer.
+            winner.name: The name of the winning boxer.
 
         Raises:
             ValueError: If there are not exactly 2 fighters within the ring.
@@ -61,7 +61,7 @@ class RingModel:
         return winner.name
 
     def clear_ring(self) -> None:
-        """Clears out the boxer objects within the ring."""
+        """Clears out the Boxer objects stored within the ring."""
         if not self.ring:
             return
         self.ring.clear()
