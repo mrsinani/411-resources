@@ -5,6 +5,10 @@
 
 - [x] Documentation
 
+- [x] Venv script
+
+- [ ] Docker script 
+
 - [ ] Logging
 
 - [ ] Testing
