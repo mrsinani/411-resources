@@ -13,7 +13,8 @@ configure_logger(logger)
 
 @dataclass
 class Boxer:
-    """Represents a boxer in the database.
+    """
+    A class to represent a boxer in the database.
 
     Attributes:
         id (int): The unique identifier index for the boxer.
