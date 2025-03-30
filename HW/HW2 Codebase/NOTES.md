@@ -7,7 +7,7 @@
 
 - [x] Venv script
 
-- [ ] Docker script 
+- [x] Docker script 
 
 - [ ] Logging
 
