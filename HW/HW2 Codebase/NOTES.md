@@ -1,11 +1,27 @@
 # Notes
 
+
+## Todolist
+
+- [x] Documentation
+
+- [ ] Logging
+
+- [ ] Testing
+
+
+## Logging
+
+
+## Testing
+
+
 ## Docstring standard
 Following: https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html
 
-Make sure to follow this standard for the assignment. 
+Make sure to follow this standard for the assignment.
 
-**Important**: There are several cases where a documentation standard must be chosen and stuck to throughout the codebase. For documenting attributes/parameters for a function, I prefer documenting it in the `Args` section rather than an inline docstring directly under the variable. And just for consistency, since all other functions get their docstring within their function body, I will be including the docstring for the `__init__` files *within* its own body. The alternative would have been to include the `__init__` docstring within the `Class` docstring. Check the following code blocks for more clarity. 
+**Important**: There are several cases where a documentation standard must be chosen and stuck to throughout the codebase. For documenting attributes/parameters for a function, I prefer documenting it in the `Args` section rather than an inline docstring directly under the variable. And just for consistency, since all other functions get their docstring within their function body, I will be including the docstring for the `__init__` files *within* its own body. The alternative would have been to include the `__init__` docstring within the `Class` docstring. Check the following code blocks for more clarity.
 
 ***Below is the documentation standards we are to follow:***
 
@@ -147,6 +163,4 @@ class ExampleClass(object):
         pass
 ```
 
-## Logging
 
-## Testing
