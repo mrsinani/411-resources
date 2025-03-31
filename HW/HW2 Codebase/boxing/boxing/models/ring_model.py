@@ -88,13 +88,14 @@ class RingModel:
             TypeError: If input is not a single instance of a Boxer or a tuple of Boxers.
             ValueError: If input fills ring with more than 2 Boxer objects within the ring at the same time.
         """
-        logger.info(f"Attempting to enter boxer {boxer.name} into the ring")
-        
+        # First check the type before accessing any attribute
         if not isinstance(boxer, Boxer):
             logger.error(f"Invalid type: Expected 'Boxer', got '{type(boxer).__name__}'")
             raise TypeError(
                 f"Invalid type: Expected 'Boxer', got '{type(boxer).__name__}'"
             )
+            
+        logger.info(f"Attempting to enter boxer {boxer.name} into the ring")
 
         if len(self.ring) >= 2:
             logger.warning("Ring is full, cannot add more boxers")
