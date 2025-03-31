@@ -1,5 +1,5 @@
 from flask_cors import CORS
-
+from dotenv import load_dotenv
 from boxing.models import boxers_model
 from boxing.models.ring_model import RingModel
 from boxing.utils.logger import configure_logger
