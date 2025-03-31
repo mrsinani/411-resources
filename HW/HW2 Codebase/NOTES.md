@@ -7,7 +7,11 @@
 
 - [x] Venv script
 
-- [x] Docker script 
+- [x] Docker script
+
+- [x] Smoketests script
+
+- [ ]  Unit tests 
 
 - [ ] Logging
 
