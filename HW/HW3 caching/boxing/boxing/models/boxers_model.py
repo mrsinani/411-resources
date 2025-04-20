@@ -1,4 +1,5 @@
 import logging
+import time
 from typing import List
 
 from sqlalchemy.exc import IntegrityError
@@ -19,7 +20,11 @@ class Boxers(db.Model):
     age, and fight statistics. Used in a Flask-SQLAlchemy application to
     manage boxer data, run simulations, and track fight outcomes.
 
+    
     """
+    # TTL Cache: boxer_id -> (Boxers instance, expiration timestamp)
+    _boxer_cache = {}
+    _cache_ttl_seconds = 300  # 5 minutes
 
     def __init__(self, name: str, weight: float, height: float, reach: float, age: int):
         """Initialize a new Boxer instance with basic attributes.
@@ -37,6 +42,28 @@ class Boxers(db.Model):
 
         """
         pass
+
+    @classmethod
+    def get_boxer_by_id(cls, boxer_id: int) -> "Boxers":
+        now = time.time()
+        if boxer_id in cls._boxer_cache:
+            boxer, expires_at = cls._boxer_cache[boxer_id]
+            if now < expires_at:
+                logger.debug(f"Boxer ID {boxer_id} served from cache.")
+                return boxer
+            else:
+                del cls._boxer_cache[boxer_id]
+                logger.debug(f"Cache expired for boxer ID {boxer_id}.")
+
+        boxer = cls.query.get(boxer_id)
+        if boxer is None:
+            logger.info(f"Boxer with ID {boxer_id} not found.")
+            raise ValueError(f"Boxer with ID {boxer_id} not found.")
+        
+        cls._boxer_cache[boxer_id] = (boxer, now + cls._cache_ttl_seconds)
+        logger.debug(f"Boxer ID {boxer_id} loaded from DB and cached.")
+        return boxer
+
 
     @classmethod
     def get_weight_class(cls, weight: float) -> str:
@@ -59,6 +86,12 @@ class Boxers(db.Model):
 
         """
         pass
+
+
+
+
+
+
 
     @classmethod
     def create_boxer(cls, name: str, weight: float, height: float, reach: float, age: int) -> None:
