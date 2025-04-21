@@ -2,7 +2,7 @@ import logging
 import time
 from typing import List
 
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import SQLAlchemyError
 
 from boxing.db import db
 from boxing.utils.logger import configure_logger
@@ -60,27 +60,7 @@ class Boxers(db.Model):
         self.weight_class = self.get_weight_class(weight)
         self.fights = 0
         self.wins = 0
-    
-    @classmethod
-    def get_boxer_by_id(cls, boxer_id: int) -> "Boxers":
-        now = time.time()
-        if boxer_id in cls._boxer_cache:
-            boxer, expires_at = cls._boxer_cache[boxer_id]
-            if now < expires_at:
-                logger.debug(f"Boxer ID {boxer_id} served from cache.")
-                return boxer
-            else:
-                del cls._boxer_cache[boxer_id]
-                logger.debug(f"Cache expired for boxer ID {boxer_id}.")
 
-        boxer = cls.query.get(boxer_id)
-        if boxer is None:
-            logger.info(f"Boxer with ID {boxer_id} not found.")
-            raise ValueError(f"Boxer with ID {boxer_id} not found.")
-        
-        cls._boxer_cache[boxer_id] = (boxer, now + cls._cache_ttl_seconds)
-        logger.debug(f"Boxer ID {boxer_id} loaded from DB and cached.")
-        return boxer
 
 
     @classmethod
@@ -113,6 +93,9 @@ class Boxers(db.Model):
             weight_class = 'FEATHERWEIGHT'
         else:
             raise ValueError(f"Invalid weight: {weight}. Weight must be at least 125.")
+        
+
+
 
         return weight_class
 
@@ -172,32 +155,52 @@ class Boxers(db.Model):
             db.session.rollback()
             logger.error(f"Database error during creation: {e}")
 
+
+
+    @classmethod
+    def get_boxer_for_fight(cls, boxer_id: int) -> "Boxers":
+        """Retrieve a boxer with TTL-based in-memory cache (used only before fights)."""
+        now = time.time()
+        cached = cls._boxer_cache.get(boxer_id)
+
+        if cached:
+            boxer, expiry = cached
+            if now < expiry:
+                logger.debug(f"[CACHE HIT] Boxer {boxer_id} retrieved from cache.")
+                return boxer
+            else:
+                logger.debug(f"[CACHE EXPIRED] Boxer {boxer_id} expired from cache.")
+
+        # Cache miss or expired
+        boxer = cls.query.get(boxer_id)
+        if not boxer:
+            logger.warning(f"Boxer with ID {boxer_id} not found in DB.")
+            raise ValueError(f"Boxer with ID {boxer_id} not found")
+
+        cls._boxer_cache[boxer_id] = (boxer, now + cls._cache_ttl_seconds)
+        logger.debug(f"[CACHE MISS] Boxer {boxer_id} loaded from DB and cached.")
+        return boxer
+
+
+
+
     @classmethod
     def get_boxer_by_id(cls, boxer_id: int) -> "Boxers":
-        """Retrieve a boxer by ID.
+        now = time.time()
+        cached = cls._boxer_cache.get(boxer_id)
+        if cached and now < cached[1]:
+            logger.debug(f"Cache hit for boxer ID {boxer_id}")
+            return cached[0]
 
-        Args:
-            boxer_id: The ID of the boxer.
+        boxer = cls.query.get(boxer_id)
+        if not boxer:
+            logger.info(f"Boxer with ID {boxer_id} not found")
+            raise ValueError(f"Boxer with ID {boxer_id} not found")
 
-        Returns:
-            Boxer: The boxer instance.
+        cls._boxer_cache[boxer_id] = (boxer, now + cls._cache_ttl_seconds)
+        logger.info(f"Successfully retrieved boxer: {boxer_id}")
+        return boxer
 
-        Raises:
-            ValueError: If the boxer with the given ID does not exist.
-
-        """
-        try:
-            boxer = cls.query.get(boxer_id)
-
-            if not boxer:
-                logger.info(f"Boxer with ID {boxer_id} not found")
-                raise ValueError(f"Boxer with ID {boxer_id} not found")
-
-            logger.info(f"Successfully retrieved boxer: {boxer_id})")
-            return boxer
-
-        except ValueError:
-            logger.error(f"Boxer with ID {boxer_id} not found")
 
 
     @classmethod
@@ -221,7 +224,6 @@ class Boxers(db.Model):
                 logger.info(f"Boxer with name '{name}' not found")
                 raise ValueError(f"Boxer with name '{name}' not found")
 
-            logger.info(f"Successfully retrieved song: {song.artist} - {song.title} ({song.year})")
             return boxer
 
         except ValueError as e:
@@ -238,7 +240,11 @@ class Boxers(db.Model):
             ValueError: If the boxer with the given ID does not exist.
 
         """
+
+
         boxer = cls.get_boxer_by_id(boxer_id)
+        cls._boxer_cache.pop(boxer_id, None)
+
         if boxer is None:
             logger.info(f"Boxer with ID {boxer_id} not found.")
             raise ValueError(f"Boxer with ID {boxer_id} not found.")
@@ -257,6 +263,9 @@ class Boxers(db.Model):
             ValueError: If the number of wins exceeds the number of fights.
 
         """
+
+        
+
         if result not in {"win", "loss"}:
             raise ValueError("Result must be 'win' or 'loss'.")
 
