@@ -116,89 +116,73 @@ class Boxers(db.Model):
         logger.info(f"Creating boxer: {name}, {weight=} {height=} {reach=} {age=}")
 
         try:
-            boxer = Boxers(
-                name=name.strip(),
-                weight=weight,
-                height=height,
-                reach=reach,
-                age=age
-            )
-            # check if boxer with same name exists
-            existing = Boxers.query.filter_by(name=name.strip()).first()
-            if existing:
-                logger.error(f"Boxer already exists: {name}")
-                raise IntegrityError(f"Boxer with name '{name}' already exists.")
+            # Validate parameters before creating the boxer
             if weight < 125:
-                logger.error(f"Boxer's weight must be less than 125. Current weight: {weight}")
-                raise ValueError(f"Boxer's weight must be less than 125. Current weight: {weight}")
+                raise ValueError("Weight must be at least 125 pounds.")
             if height <= 0:
-                logger.error(f"Boxer's height must be greater than 0. Current height: {height}")
-                raise ValueError(f"Boxer's height must be greater than 0. Current height: {height}")
+                raise ValueError("Height must be greater than 0 inches.")
             if reach <= 0:
-                logger.error(f"Boxer's reach must be greater than 0. Current reach: {reach}")
-                raise ValueError(f"Boxer's reach must be greater than 0. Current reach: {reach}")
-            if age < 18 or age > 40:
-                logger.error(f"Boxer's age must be greater than between 18 and 40, inclusive. Current age: {age}")
-                raise ValueError(f"Boxer's age must be greater than between 18 and 40, inclusive. Current age: {age}")
-            # if everything is valid, commit:
+                raise ValueError("Reach must be greater than 0 inches.")
+            if not (18 <= age <= 40):
+                raise ValueError("Age must be between 18 and 40 years.")
+            
+            # Check for existing boxer with the same name
+            existing = cls.query.filter_by(name=name.strip()).first()
+            if existing:
+                raise ValueError(f"Boxer with name '{name}' already exists")
+            
+            # Create and add the boxer
+            boxer = cls(name=name.strip(), weight=weight, height=height, reach=reach, age=age)
             db.session.add(boxer)
             db.session.commit()
-
+            
             logger.info(f"Boxer created successfully: {name}")
+            return boxer
         except IntegrityError:
             db.session.rollback()
             logger.error(f"Boxer with name '{name}' already exists.")
+            raise ValueError(f"Boxer with name '{name}' already exists")
         except SQLAlchemyError as e:
             db.session.rollback()
             logger.error(f"Database error during creation: {e}")
-
-
-
-    @classmethod
-    def get_boxer_for_fight(cls, boxer_id: int) -> "Boxers":
-        """Retrieve a boxer with TTL-based in-memory cache (used only before fights)."""
-        now = time.time()
-        cached = cls._boxer_cache.get(boxer_id)
-
-        if cached:
-            boxer, expiry = cached
-            if now < expiry:
-                logger.debug(f"[CACHE HIT] Boxer {boxer_id} retrieved from cache.")
-                return boxer
-            else:
-                logger.debug(f"[CACHE EXPIRED] Boxer {boxer_id} expired from cache.")
-
-        # Cache miss or expired
-        boxer = cls.query.get(boxer_id)
-        if not boxer:
-            logger.warning(f"Boxer with ID {boxer_id} not found in DB.")
-            raise ValueError(f"Boxer with ID {boxer_id} not found")
-
-        cls._boxer_cache[boxer_id] = (boxer, now + cls._cache_ttl_seconds)
-        logger.debug(f"[CACHE MISS] Boxer {boxer_id} loaded from DB and cached.")
-        return boxer
-
-
-
+            raise
 
     @classmethod
     def get_boxer_by_id(cls, boxer_id: int) -> "Boxers":
+        """Retrieve a boxer by ID with caching.
+        
+        Args:
+            boxer_id: The ID of the boxer.
+            
+        Returns:
+            Boxer: The boxer instance.
+            
+        Raises:
+            ValueError: If the boxer with the given ID does not exist.
+        """
         now = time.time()
-        cached = cls._boxer_cache.get(boxer_id)
-        if cached and now < cached[1]:
-            logger.debug(f"Cache hit for boxer ID {boxer_id}")
-            return cached[0]
+        # Check if boxer is in cache and not expired
+        if boxer_id in cls._boxer_cache:
+            boxer, expires_at = cls._boxer_cache[boxer_id]
+            if now < expires_at:
+                logger.debug(f"Cache HIT for boxer ID {boxer_id}")
+                return boxer
+            else:
+                logger.debug(f"Cache EXPIRED for boxer ID {boxer_id}")
+                del cls._boxer_cache[boxer_id]
+        else:
+            logger.debug(f"Cache MISS for boxer ID {boxer_id}")
 
+        # Cache miss or expired, fetch from database
         boxer = cls.query.get(boxer_id)
-        if not boxer:
-            logger.info(f"Boxer with ID {boxer_id} not found")
+        if boxer is None:
+            logger.info(f"Boxer with ID {boxer_id} not found.")
             raise ValueError(f"Boxer with ID {boxer_id} not found")
-
+        
+        # Update cache
         cls._boxer_cache[boxer_id] = (boxer, now + cls._cache_ttl_seconds)
-        logger.info(f"Successfully retrieved boxer: {boxer_id}")
+        logger.debug(f"Boxer ID {boxer_id} loaded from DB and cached.")
         return boxer
-
-
 
     @classmethod
     def get_boxer_by_name(cls, name: str) -> "Boxers":
@@ -214,17 +198,13 @@ class Boxers(db.Model):
             ValueError: If the boxer with the given name does not exist.
 
         """
-        try:
-            boxer = cls.query.filter_by(name=name.strip()).first()
-
-            if not boxer:
-                logger.info(f"Boxer with name '{name}' not found")
-                raise ValueError(f"Boxer with name '{name}' not found")
-
-            return boxer
-
-        except ValueError as e:
-            logger.error(f"Boxer with name '{name}' not found")
+        boxer = cls.query.filter_by(name=name.strip()).first()
+        
+        if boxer is None:
+            logger.info(f"Boxer '{name}' not found.")
+            raise ValueError(f"Boxer with name '{name}' not found")
+            
+        return boxer
 
     @classmethod
     def delete(cls, boxer_id: int) -> None:
