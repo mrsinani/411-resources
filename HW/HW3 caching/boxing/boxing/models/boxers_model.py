@@ -1,7 +1,7 @@
 import logging
 import time
 from typing import List
-
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.exc import SQLAlchemyError
 
 from boxing.db import db
