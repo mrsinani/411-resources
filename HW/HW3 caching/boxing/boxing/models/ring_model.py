@@ -120,6 +120,7 @@ class RingModel:
             boxer = Boxers.get_boxer_by_id(boxer_id)
         except ValueError as e:
             logger.error(str(e))
+            raise
         
         logger.info(f"Adding boxer '{boxer.name}' (ID {boxer_id}) to the ring")
         self.ring.append(boxer_id)

@@ -93,9 +93,6 @@ class Boxers(db.Model):
             weight_class = 'FEATHERWEIGHT'
         else:
             raise ValueError(f"Invalid weight: {weight}. Weight must be at least 125.")
-        
-
-
 
         return weight_class
 
@@ -129,7 +126,7 @@ class Boxers(db.Model):
             # check if boxer with same name exists
             existing = Boxers.query.filter_by(name=name.strip()).first()
             if existing:
-                logger.error(f"Boxer already exists: {name} ")
+                logger.error(f"Boxer already exists: {name}")
                 raise IntegrityError(f"Boxer with name '{name}' already exists.")
             if weight < 125:
                 logger.error(f"Boxer's weight must be less than 125. Current weight: {weight}")
