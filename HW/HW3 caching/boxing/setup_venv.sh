@@ -1,8 +1,11 @@
 #!/bin/bash
 
 # Set the name of the virtual environment directory
-VENV_DIR="meal_max_venv"
+VENV_DIR=".venv"
 REQUIREMENTS_FILE="requirements.lock"
+
+# Create instance directory for SQLite database
+mkdir -p instance
 
 # Check if the virtual environment already exists
 if [ ! -d "$VENV_DIR" ]; then
@@ -23,3 +26,5 @@ else
   source "$VENV_DIR/bin/activate"
   echo "Virtual environment already exists. Activated."
 fi
+
+echo "Setup complete! Run 'python app.py' to start the application."

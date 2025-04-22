@@ -24,6 +24,8 @@ class Boxers(db.Model):
     """
     # TTL Cache: boxer_id -> (Boxers instance, expiration timestamp)
     _boxer_cache = {}
+    # Name cache for lookups by name
+    _name_cache = {}
     _cache_ttl_seconds = 300  # 5 minutes
     __tablename__ = 'boxers'
 
@@ -198,12 +200,39 @@ class Boxers(db.Model):
             ValueError: If the boxer with the given name does not exist.
 
         """
-        boxer = cls.query.filter_by(name=name.strip()).first()
+        # Normalize name
+        normalized_name = name.strip()
+        now = time.time()
+        
+        # Check name cache first
+        if normalized_name in cls._name_cache:
+            boxer_id, expires_at = cls._name_cache[normalized_name]
+            if now < expires_at:
+                # Name cache hit, now check boxer cache
+                if boxer_id in cls._boxer_cache:
+                    boxer, boxer_expires_at = cls._boxer_cache[boxer_id]
+                    if now < boxer_expires_at:
+                        logger.debug(f"Cache HIT for boxer name '{normalized_name}'")
+                        return boxer
+            
+            # Either name cache or boxer cache expired, remove entries
+            logger.debug(f"Cache EXPIRED for boxer name '{normalized_name}'")
+            cls._name_cache.pop(normalized_name, None)
+        else:
+            logger.debug(f"Cache MISS for boxer name '{normalized_name}'")
+        
+        # Cache miss or expired, fetch from database
+        boxer = cls.query.filter_by(name=normalized_name).first()
         
         if boxer is None:
-            logger.info(f"Boxer '{name}' not found.")
-            raise ValueError(f"Boxer with name '{name}' not found")
-            
+            logger.info(f"Boxer '{normalized_name}' not found.")
+            raise ValueError(f"Boxer with name '{normalized_name}' not found")
+        
+        # Update both caches
+        cls._boxer_cache[boxer.id] = (boxer, now + cls._cache_ttl_seconds)
+        cls._name_cache[normalized_name] = (boxer.id, now + cls._cache_ttl_seconds)
+        logger.debug(f"Boxer name '{normalized_name}' loaded from DB and cached.")
+        
         return boxer
 
     @classmethod
@@ -217,14 +246,22 @@ class Boxers(db.Model):
             ValueError: If the boxer with the given ID does not exist.
 
         """
-
-
+        # Get the boxer first to ensure it exists
         boxer = cls.get_boxer_by_id(boxer_id)
-        cls._boxer_cache.pop(boxer_id, None)
-
-        if boxer is None:
-            logger.info(f"Boxer with ID {boxer_id} not found.")
-            raise ValueError(f"Boxer with ID {boxer_id} not found.")
+        
+        # Remove from both caches before deleting
+        if boxer_id in cls._boxer_cache:
+            del cls._boxer_cache[boxer_id]
+            logger.debug(f"Removed boxer ID {boxer_id} from cache during deletion")
+        
+        # Also clear any name cache entries that might reference this boxer
+        if hasattr(boxer, 'name'):
+            normalized_name = boxer.name.strip()
+            if normalized_name in cls._name_cache:
+                del cls._name_cache[normalized_name]
+                logger.debug(f"Removed boxer name '{normalized_name}' from cache during deletion")
+            
+        # Delete from database
         db.session.delete(boxer)
         db.session.commit()
         logger.info(f"Boxer with ID {boxer_id} permanently deleted.")
@@ -240,9 +277,6 @@ class Boxers(db.Model):
             ValueError: If the number of wins exceeds the number of fights.
 
         """
-
-        
-
         if result not in {"win", "loss"}:
             raise ValueError("Result must be 'win' or 'loss'.")
 
@@ -253,7 +287,14 @@ class Boxers(db.Model):
         if self.wins > self.fights:
             raise ValueError("Wins cannot exceed number of fights.")
 
+        # Commit changes to the database
         db.session.commit()
+        
+        # Invalidate cache for this boxer to ensure fresh data on next retrieval
+        if hasattr(self, 'id') and self.id in self.__class__._boxer_cache:
+            del self.__class__._boxer_cache[self.id]
+            logger.debug(f"Invalidated cache for boxer ID {self.id} after stats update")
+            
         logger.info(f"Updated stats for boxer {self.name}: {self.fights} fights, {self.wins} wins.")
 
     @staticmethod
@@ -297,3 +338,13 @@ class Boxers(db.Model):
         leaderboard.sort(key=lambda b: b[sort_by], reverse=True)
         logger.info("Leaderboard retrieved successfully.")
         return leaderboard
+
+    @classmethod
+    def clear_cache(cls) -> None:
+        """Clear all boxer caches.
+        
+        This is useful for testing or when you want to ensure fresh data.
+        """
+        cls._boxer_cache.clear()
+        cls._name_cache.clear()
+        logger.info("All boxer caches cleared")

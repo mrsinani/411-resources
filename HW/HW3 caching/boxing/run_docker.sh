@@ -3,9 +3,9 @@
 # Variables
 IMAGE_NAME="boxing"
 CONTAINER_TAG="1.0.0"
-HOST_PORT=5000
+HOST_PORT=5001
 CONTAINER_PORT=5000
-DB_VOLUME_PATH="./db"   # Adjust this to the desired host path for the database persistence
+DB_VOLUME_PATH="./instance"   # Path for database persistence
 BUILD=true  # Set this to true if you want to build the image
 
 # Check if we need to build the Docker image
@@ -45,6 +45,8 @@ docker run -d \
   --name ${IMAGE_NAME}_container \
   --env-file .env \
   -p ${HOST_PORT}:${CONTAINER_PORT} \
+  -v "$(pwd)/${DB_VOLUME_PATH}:/app/instance" \
   ${IMAGE_NAME}:${CONTAINER_TAG}
 
 echo "Docker container is running on port ${HOST_PORT}."
+echo "Access the application at http://localhost:${HOST_PORT}"
