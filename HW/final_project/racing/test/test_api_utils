@@ -1,0 +1,51 @@
+import pytest
+import requests
+from unittest.mock import patch
+from random_fetcher import get_random
+
+
+@patch("random_fetcher.requests.get")
+def test_get_random_success(mock_get):
+    """
+    Test fetching a valid random float from random.org returns a float.
+    """
+    mock_response = requests.models.Response()
+    mock_response.status_code = 200
+    mock_response._content = b"0.72"
+    mock_get.return_value = mock_response
+
+    result = get_random()
+    assert isinstance(result, float)
+    assert 0.0 <= result <= 1.0
+
+
+@patch("random_fetcher.requests.get")
+def test_get_random_invalid_response(mock_get):
+    """
+    Test that a non-float response raises ValueError.
+    """
+    mock_response = requests.models.Response()
+    mock_response.status_code = 200
+    mock_response._content = b"not_a_number"
+    mock_get.return_value = mock_response
+
+    with pytest.raises(ValueError, match="Invalid response from random.org"):
+        get_random()
+
+
+@patch("random_fetcher.requests.get", side_effect=requests.exceptions.Timeout)
+def test_get_random_timeout(mock_get):
+    """
+    Test that a request timeout raises RuntimeError.
+    """
+    with pytest.raises(RuntimeError, match="timed out"):
+        get_random()
+
+
+@patch("random_fetcher.requests.get", side_effect=requests.exceptions.RequestException("Connection error"))
+def test_get_random_request_exception(mock_get):
+    """
+    Test that a general request failure raises RuntimeError.
+    """
+    with pytest.raises(RuntimeError, match="Request to random.org failed"):
+        get_random()
