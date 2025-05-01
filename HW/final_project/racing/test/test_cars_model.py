@@ -1,12 +1,12 @@
 import pytest
 from unittest.mock import MagicMock
-from models.cars_model import Cars
+from ..models.cars_model import Cars
 
 @pytest.fixture
 def mock_db_session(monkeypatch):
     """Mock the SQLAlchemy DB session used in Cars methods."""
     mock_session = MagicMock()
-    monkeypatch.setattr("cars_model.db.session", mock_session)
+    monkeypatch.setattr("racing.models.cars_model.db.session", mock_session)
     return mock_session
 
 def test_get_car_class_economy():

@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 from flask import Flask, jsonify, make_response, Response, request
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-# from flask_cors import CORS
+from flask_cors import CORS
 
 from config import ProductionConfig
 
@@ -16,6 +16,7 @@ load_dotenv()
 
 def create_app(config_class=ProductionConfig):
     app = Flask(__name__)
+    CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
     configure_logger(app.logger)
 
     app.config.from_object(config_class)

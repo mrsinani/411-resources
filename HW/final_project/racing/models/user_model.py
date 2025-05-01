@@ -1,39 +1,38 @@
-import pytest
-from unittest.mock import MagicMock
-from models.user_model import Users
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_sqlalchemy import SQLAlchemy
 
-@pytest.fixture
-def mock_db_session(monkeypatch):
-    """Mock the SQLAlchemy DB session used in Users methods."""
-    mock_session = MagicMock()
-    monkeypatch.setattr("user_model.db.session", mock_session)
-    return mock_session
+db = SQLAlchemy()
 
-def test_create_user_success(mock_db_session, monkeypatch):
-    """Test creating a new user when username is available."""
-    monkeypatch.setattr("user_model.Users.query", MagicMock(filter_by=MagicMock(return_value=MagicMock(first=lambda: None))))
-    Users.create_user("newuser", "password123")
-    assert mock_db_session.add.called
-    assert mock_db_session.commit.called
+class Users(db.Model):
+    __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128), nullable=False)
 
-def test_create_user_already_exists(monkeypatch):
-    """Test creating a user with a taken username raises ValueError."""
-    mock_query = MagicMock()
-    mock_query.filter_by.return_value.first.return_value = Users("existing", "hash")
-    monkeypatch.setattr("user_model.Users.query", mock_query)
-    with pytest.raises(ValueError, match="already exists"):
-        Users.create_user("existing", "pass")
+    def __init__(self, username, password):
+        self.username = username
+        self.password_hash = generate_password_hash(password)
 
-def test_check_password_correct(monkeypatch):
-    """Test correct password returns True."""
-    hashed = generate_password_hash("secret")
-    mock_user = Users("test", hashed)
-    monkeypatch.setattr("user_model.Users.query", MagicMock(filter_by=MagicMock(return_value=MagicMock(first=lambda: mock_user))))
-    assert Users.check_password("test", "secret") is True
+    @classmethod
+    def create_user(cls, username, password):
+        if cls.query.filter_by(username=username).first():
+            raise ValueError("User already exists")
+        user = cls(username, password)
+        db.session.add(user)
+        db.session.commit()
+        return user
 
-def test_delete_user_not_found(monkeypatch):
-    """Test deleting a non-existent user raises ValueError."""
-    monkeypatch.setattr("user_model.Users.query", MagicMock(filter_by=MagicMock(return_value=MagicMock(first=lambda: None))))
-    with pytest.raises(ValueError, match="does not exist"):
-        Users.delete_user("ghost")
+    @classmethod
+    def check_password(cls, username, password):
+        user = cls.query.filter_by(username=username).first()
+        if not user:
+            return False
+        return check_password_hash(user.password_hash, password)
+
+    @classmethod
+    def delete_user(cls, username):
+        user = cls.query.filter_by(username=username).first()
+        if not user:
+            raise ValueError("User does not exist")
+        db.session.delete(user)
+        db.session.commit()

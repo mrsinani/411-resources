@@ -28,6 +28,12 @@ chmod +x run_docker.sh
 
 The application will be available at `http://localhost:5001`.
 
+## Frontend running:
+
+cd HW/final_project/racing/frontend
+npm i && npm start
+go to localhost:3000 and see results (backend has to be running at port 5001 with either docker or local server)
+
 ### Local Development
 
 To set up for local development:
