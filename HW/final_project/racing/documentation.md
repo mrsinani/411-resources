@@ -132,7 +132,7 @@
 - **Response Format:** JSON  
   - **Success Response Example:**  
     - Code: 201  
-    - Content: `{ "status": "success", "message": "Car 'Toyota Supra' added successfully", "car_class": "A" }`  
+    - Content: `{ "status": "success", "message": "Car 'Toyota Supra' added successfully", "car_class": "Economy" }`  
 - **Example Request:**
 ```json
 {
@@ -151,7 +151,7 @@
 {
   "status": "success",
   "message": "Car 'Toyota Supra' added successfully",
-  "car_class": "A"
+  "car_class": "Economy"
 }
 ```
 
@@ -166,6 +166,18 @@
   - **Success Response Example:**  
     - Code: 200  
     - Content: `{ "status": "success", "message": "Car 'Toyota Supra' deleted successfully" }`
+- **Example Request:**
+```bash
+curl -X DELETE http://localhost:5000/api/delete-car/1
+
+```
+- **Example Response:**
+```json
+{
+  "status": "success",
+  "message": "Car 'Toyota Supra' deleted successfully"
+}
+```   
 
 ---
 
@@ -177,7 +189,50 @@
 - **Response Format:** JSON  
   - **Success Response Example:**  
     - Code: 200  
-    - Content: `{ "status": "success", "car": { ...car details... } }`
+    - Content: 
+    ```json
+    {
+        "status": "success",
+        "car": {
+            "id": 1,
+            "make": "Toyota",
+            "model": "Supra",
+            "year": 2020,
+            "horsepower": 335,
+            "weight": 3450.5,
+            "zero_to_sixty": 4.1,
+            "top_speed": 155,
+            "handling": 8,
+            "car_class": "Economy",
+            "races": 2,
+            "wins": 1
+        }
+    }
+    ```
+- **Example Request:**
+```bash
+curl -X GET http://localhost:5000/api/get-car-by-id/1
+```
+- **Example Response:**
+```json
+    {
+        "status": "success",
+        "car": {
+            "id": 1,
+            "make": "Toyota",
+            "model": "Supra",
+            "year": 2020,
+            "horsepower": 335,
+            "weight": 3450.5,
+            "zero_to_sixty": 4.1,
+            "top_speed": 155,
+            "handling": 8,
+            "car_class": "Economy",
+            "races": 2,
+            "wins": 1
+        }
+    }
+```
 
 ---
 
@@ -190,17 +245,65 @@
 - **Response Format:** JSON  
   - **Success Response Example:**  
     - Code: 200  
-    - Content: `{ "status": "success", "car": { ...car details... } }`
+    - Content: 
+    ```json
+    {
+        "status": "success",
+        "car": {
+            "id": 1,
+            "make": "Toyota",
+            "model": "Supra",
+            "year": 2020,
+            "horsepower": 335,
+            "weight": 3450.5,
+            "zero_to_sixty": 4.1,
+            "top_speed": 155,
+            "handling": 8,
+            "car_class": "Economy",
+            "races": 2,
+            "wins": 1
+        }
+    }
+    ```
+- **Example Request:**
+```bash
+curl -X GET http://localhost:5000/api/get-car-by-make-model/1
+```
+- **Example Response:**
+```json
+    {
+        "status": "success",
+        "car": {
+            "id": 1,
+            "make": "Toyota",
+            "model": "Supra",
+            "year": 2020,
+            "horsepower": 335,
+            "weight": 3450.5,
+            "zero_to_sixty": 4.1,
+            "top_speed": 155,
+            "handling": 8,
+            "car_class": "Economy",
+            "races": 2,
+            "wins": 1
+        }
+    }
+```
 
 ---
 
 ### **Route: `/api/race`**
 - **Request Type:** GET  
-- **Purpose:** Simulates a race between two cars.  
+- **Purpose:** Simulates a race between two cars. 
+- **Request Format:** 
 - **Response Format:** JSON  
   - **Success Response Example:**  
     - Code: 200  
     - Content: `{ "status": "success", "message": "Race completed successfully", "winner": "Toyota Supra" }`
+- **Example Response:**
+```json
+{ "status": "success", "message": "Race completed successfully", "winner": "Toyota Supra" }
+```
 
 ---
 

@@ -52,124 +52,369 @@ source .venv/bin/activate
 python app.py
 ```
 
-## API Endpoints
+# API Route Documentation
 
-### Authentication
+---
 
-- `PUT /api/create-user` - Create a new user
-- `POST /api/login` - Log in as a user
-- `POST /api/logout` - Log out
-- `POST /api/change-password` - Change user password
-
-### Car Management
-
-- `POST /api/add-car` - Add a new car
-- `GET /api/get-cars` - Get all cars
-- `GET /api/get-car-by-id/<car_id>` - Get a car by ID
-- `GET /api/get-car-by-make-model/<make>/<model>` - Get a car by make and model
-- `DELETE /api/delete-car/<car_id>` - Delete a car
-
-### Racing
-
-- `POST /api/enter-track` - Add a car to the track for a race
-- `GET /api/race` - Simulate a race between two cars
-- `POST /api/clear-track` - Clear all cars from the track
-- `GET /api/leaderboard` - Get the racing leaderboard
-
-### System
-
-- `GET /api/health` - Health check
-- `DELETE /api/reset-users` - Reset users table
-- `DELETE /api/reset-cars` - Reset cars table
-
-## Sample Car Data
-
-Below are some example cars to add to the system:
-
-### Sports Cars
-
+### **Route: `/api/create-user`**
+- **Request Type:** PUT  
+- **Purpose:** Registers a new user account.  
+- **Request Body:**  
+  - `username` (String): Desired username  
+  - `password` (String): Desired password  
+- **Response Format:** JSON  
+  - **Success Response Example:**  
+    - Code: 201  
+    - Content: `{ "status": "success", "message": "User 'example' created successfully" }`  
+- **Example Request:**
 ```json
 {
-  "make": "Porsche",
-  "model": "911 Carrera",
-  "year": 2022,
-  "horsepower": 379,
-  "weight": 3354,
-  "zero_to_sixty": 4.0,
-  "top_speed": 182,
-  "handling": 9
+  "username": "newuser",
+  "password": "securepass123"
+}
+```
+- **Example Response:**
+```json
+{
+  "status": "success",
+  "message": "User 'newuser' created successfully"
 }
 ```
 
+---
+
+### **Route: `/api/login`**
+- **Request Type:** POST  
+- **Purpose:** Authenticates and logs in a user.  
+- **Request Body:**  
+  - `username` (String): User's username  
+  - `password` (String): User's password  
+- **Response Format:** JSON  
+  - **Success Response Example:**  
+    - Code: 200  
+    - Content: `{ "status": "success", "message": "User 'newuser' logged in successfully" }`  
+- **Example Request:**
 ```json
 {
-  "make": "Chevrolet",
-  "model": "Corvette C8",
-  "year": 2023,
-  "horsepower": 495,
-  "weight": 3647,
-  "zero_to_sixty": 2.9,
-  "top_speed": 194,
-  "handling": 8
+  "username": "newuser",
+  "password": "securepass123"
+}
+```
+- **Example Response:**
+```json
+{
+  "status": "success",
+  "message": "User 'newuser' logged in successfully"
 }
 ```
 
-### Supercars
+---
 
+### **Route: `/api/logout`**
+- **Request Type:** POST  
+- **Purpose:** Logs out the current user.  
+- **Request Body:** None  
+- **Response Format:** JSON  
+  - **Success Response Example:**  
+    - Code: 200  
+    - Content: `{ "status": "success", "message": "User logged out successfully" }`  
+- **Example Response:**
 ```json
 {
-  "make": "Ferrari",
-  "model": "F8 Tributo",
-  "year": 2021,
-  "horsepower": 710,
-  "weight": 3164,
-  "zero_to_sixty": 2.8,
-  "top_speed": 211,
-  "handling": 9
+  "status": "success",
+  "message": "User logged out successfully"
 }
 ```
 
+---
+
+### **Route: `/api/change-password`**
+- **Request Type:** POST  
+- **Purpose:** Changes the password for the current user.  
+- **Request Body:**  
+  - `new_password` (String): New password to be set  
+- **Response Format:** JSON  
+  - **Success Response Example:**  
+    - Code: 200  
+    - Content: `{ "status": "success", "message": "Password changed successfully" }`  
+- **Example Request:**
 ```json
 {
-  "make": "Lamborghini",
-  "model": "Huracan Evo",
-  "year": 2022,
-  "horsepower": 640,
-  "weight": 3135,
-  "zero_to_sixty": 2.9,
-  "top_speed": 202,
-  "handling": 9
+  "new_password": "newsecurepassword"
+}
+```
+- **Example Response:**
+```json
+{
+  "status": "success",
+  "message": "Password changed successfully"
 }
 ```
 
-### Economy Cars
+---
 
+### **Route: `/api/reset-users`**
+- **Request Type:** DELETE  
+- **Purpose:** Deletes all users by recreating the Users table.  
+- **Request Body:** None  
+- **Response Format:** JSON  
+  - **Success Response Example:**  
+    - Code: 200  
+    - Content: `{ "status": "success", "message": "Users table recreated successfully" }`  
+- **Example Response:**
 ```json
 {
-  "make": "Honda",
-  "model": "Civic",
-  "year": 2023,
-  "horsepower": 158,
-  "weight": 2877,
-  "zero_to_sixty": 7.9,
-  "top_speed": 137,
-  "handling": 6
+  "status": "success",
+  "message": "Users table recreated successfully"
 }
 ```
 
+---
+
+### **Route: `/api/add-car`**
+- **Request Type:** POST  
+- **Purpose:** Adds a new car to the system.  
+- **Request Body:**  
+  - `make` (String): car manufacturer
+  - `model` (String): car model
+  - `year` (Integer): year the car was produced
+  - `horsepower` (Integer): horsepower of the car
+  - `weight` (Float): weight of the car in pounds
+  - `zero_to_sixty` (Float): 0-60 mph time in seconds
+  - `top_speed` (Integer): top speed of car in miles per hour
+  - `handling` (Integer): handling rating from 1-10  
+- **Response Format:** JSON  
+  - **Success Response Example:**  
+    - Code: 201  
+    - Content: `{ "status": "success", "message": "Car 'Toyota Supra' added successfully", "car_class": "Economy" }`  
+- **Example Request:**
 ```json
 {
   "make": "Toyota",
-  "model": "Corolla",
-  "year": 2023,
-  "horsepower": 169,
-  "weight": 3110,
-  "zero_to_sixty": 8.2,
-  "top_speed": 118,
-  "handling": 5
+  "model": "Supra",
+  "year": 2020,
+  "horsepower": 335,
+  "weight": 3450.5,
+  "zero_to_sixty": 4.1,
+  "top_speed": 155,
+  "handling": 8
+}
+```
+- **Example Response:**
+```json
+{
+  "status": "success",
+  "message": "Car 'Toyota Supra' added successfully",
+  "car_class": "Economy"
 }
 ```
 
-## License
+---
 
-This project is licensed under the MIT License.
+### **Route: `/api/delete-car/<car_id>`**
+- **Request Type:** DELETE  
+- **Purpose:** Deletes a car by its ID.  
+- **Path Parameter:**  
+  - `car_id` (Integer): Car's ID  
+- **Response Format:** JSON  
+  - **Success Response Example:**  
+    - Code: 200  
+    - Content: `{ "status": "success", "message": "Car 'Toyota Supra' deleted successfully" }`
+- **Example Request:**
+```bash
+curl -X DELETE http://localhost:5000/api/delete-car/1
+
+```
+- **Example Response:**
+```json
+{
+  "status": "success",
+  "message": "Car 'Toyota Supra' deleted successfully"
+}
+```   
+
+---
+
+### **Route: `/api/get-car-by-id/<car_id>`**
+- **Request Type:** GET  
+- **Purpose:** Retrieves car details by ID.  
+- **Path Parameter:**  
+  - `car_id` (Integer): Car's ID  
+- **Response Format:** JSON  
+  - **Success Response Example:**  
+    - Code: 200  
+    - Content: 
+    ```json
+    {
+        "status": "success",
+        "car": {
+            "id": 1,
+            "make": "Toyota",
+            "model": "Supra",
+            "year": 2020,
+            "horsepower": 335,
+            "weight": 3450.5,
+            "zero_to_sixty": 4.1,
+            "top_speed": 155,
+            "handling": 8,
+            "car_class": "Economy",
+            "races": 2,
+            "wins": 1
+        }
+    }
+    ```
+- **Example Request:**
+```bash
+curl -X GET http://localhost:5000/api/get-car-by-id/1
+```
+- **Example Response:**
+```json
+    {
+        "status": "success",
+        "car": {
+            "id": 1,
+            "make": "Toyota",
+            "model": "Supra",
+            "year": 2020,
+            "horsepower": 335,
+            "weight": 3450.5,
+            "zero_to_sixty": 4.1,
+            "top_speed": 155,
+            "handling": 8,
+            "car_class": "Economy",
+            "races": 2,
+            "wins": 1
+        }
+    }
+```
+
+---
+
+### **Route: `/api/get-car-by-make-model/<make>/<model>`**
+- **Request Type:** GET  
+- **Purpose:** Retrieves car details by make and model.  
+- **Path Parameters:**  
+  - `make` (String): Car make  
+  - `model` (String): Car model  
+- **Response Format:** JSON  
+  - **Success Response Example:**  
+    - Code: 200  
+    - Content: 
+    ```json
+    {
+        "status": "success",
+        "car": {
+            "id": 1,
+            "make": "Toyota",
+            "model": "Supra",
+            "year": 2020,
+            "horsepower": 335,
+            "weight": 3450.5,
+            "zero_to_sixty": 4.1,
+            "top_speed": 155,
+            "handling": 8,
+            "car_class": "Economy",
+            "races": 2,
+            "wins": 1
+        }
+    }
+    ```
+- **Example Request:**
+```bash
+curl -X GET http://localhost:5000/api/get-car-by-make-model/1
+```
+- **Example Response:**
+```json
+    {
+        "status": "success",
+        "car": {
+            "id": 1,
+            "make": "Toyota",
+            "model": "Supra",
+            "year": 2020,
+            "horsepower": 335,
+            "weight": 3450.5,
+            "zero_to_sixty": 4.1,
+            "top_speed": 155,
+            "handling": 8,
+            "car_class": "Economy",
+            "races": 2,
+            "wins": 1
+        }
+    }
+```
+
+---
+
+### **Route: `/api/race`**
+- **Request Type:** GET  
+- **Purpose:** Simulates a race between two cars. 
+- **Request Format:** 
+- **Response Format:** JSON  
+  - **Success Response Example:**  
+    - Code: 200  
+    - Content: `{ "status": "success", "message": "Race completed successfully", "winner": "Toyota Supra" }`
+- **Example Response:**
+```json
+{ "status": "success", "message": "Race completed successfully", "winner": "Toyota Supra" }
+```
+
+---
+
+### **Route: `/api/clear-track`**
+- **Request Type:** POST  
+- **Purpose:** Clears all cars from the race track.  
+- **Response Format:** JSON  
+  - **Success Response Example:**  
+    - Code: 200  
+    - Content: `{ "status": "success", "message": "Track cleared successfully" }`
+
+---
+
+### **Route: `/api/enter-track`**
+- **Request Type:** POST  
+- **Purpose:** Adds a car to the race track.  
+- **Request Body:**  
+  - `car_id` (Integer): ID of the car to add  
+- **Response Format:** JSON  
+  - **Success Response Example:**  
+    - Code: 200  
+    - Content: `{ "status": "success", "message": "Toyota Supra entered the track", "cars_on_track": 2 }`  
+- **Example Request:**
+```json
+{
+  "car_id": 1
+}
+```
+
+---
+
+### **Route: `/api/get-cars`**
+- **Request Type:** GET  
+- **Purpose:** Retrieves all cars in the system.  
+- **Response Format:** JSON  
+  - **Success Response Example:**  
+    - Code: 200  
+    - Content: `{ "status": "success", "count": 5, "cars": [ ... ] }`
+
+---
+
+### **Route: `/api/leaderboard`**
+- **Request Type:** GET  
+- **Purpose:** Returns the leaderboard of cars by wins or win percentage.  
+- **Query Parameters:**  
+  - `sort_by` (String): Either `"wins"` or `"win_pct"` (optional, default is `"wins"`)  
+- **Response Format:** JSON  
+  - **Success Response Example:**  
+    - Code: 200  
+    - Content: `{ "status": "success", "count": 3, "sort_by": "wins", "leaderboard": [ ... ] }`
+
+---
+
+### **Route: `/api/health`**
+- **Request Type:** GET  
+- **Purpose:** Basic health check for the server.  
+- **Response Format:** JSON  
+  - **Success Response Example:**  
+    - Code: 200  
+    - Content: `{ "status": "success", "message": "Service is running" }`
