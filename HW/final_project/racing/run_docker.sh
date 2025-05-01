@@ -74,8 +74,8 @@ if [ "$RUN" = true ]; then
     # Stop and remove existing container if it exists
     docker rm -f $CONTAINER_NAME 2>/dev/null || true
     # Run the container with port mapping
-    docker run -d -p 5000:5000 --name $CONTAINER_NAME $IMAGE_NAME
-    echo "Container is running at http://localhost:5000"
+    docker run -d -p 5001:5001 --name $CONTAINER_NAME $IMAGE_NAME
+    echo "Container is running at http://localhost:5001"
 fi
 
 exit 0 

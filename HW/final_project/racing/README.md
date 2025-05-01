@@ -26,7 +26,7 @@ chmod +x run_docker.sh
 ./run_docker.sh
 ```
 
-The application will be available at `http://localhost:5000`.
+The application will be available at `http://localhost:5001`.
 
 ### Local Development
 
@@ -242,7 +242,7 @@ python app.py
     - Content: `{ "status": "success", "message": "Car 'Toyota Supra' deleted successfully" }`
 - **Example Request:**
 ```bash
-curl -X DELETE http://localhost:5000/api/delete-car/1
+curl -X DELETE http://localhost:5001/api/delete-car/1
 
 ```
 - **Example Response:**
@@ -299,7 +299,7 @@ curl -X DELETE http://localhost:5000/api/delete-car/1
     ```
 - **Example Request:**
 ```bash
-curl -X GET http://localhost:5000/api/get-car-by-id/1
+curl -X GET http://localhost:5001/api/get-car-by-id/1
 ```
 - **Example Response:**
 ```json
@@ -369,7 +369,7 @@ curl -X GET http://localhost:5000/api/get-car-by-id/1
     ```
 - **Example Request:**
 ```bash
-curl -X GET http://localhost:5000/api/get-car-by-make-model/Toyota/Supra
+curl -X GET http://localhost:5001/api/get-car-by-make-model/Toyota/Supra
 ```
 - **Example Response:**
 ```json

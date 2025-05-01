@@ -21,7 +21,7 @@ ENV FLASK_APP=app.py
 ENV FLASK_ENV=production
 
 # Expose port
-EXPOSE 5000
+EXPOSE 5001
 
 # Run the application
 CMD ["python", "app.py"] 

@@ -15,7 +15,7 @@ RUN pip install --no-cache-dir -r requirements.lock
 
 # Set default environment variables for port and Flask environment
 ENV FLASK_ENV=development
-ENV FLASK_PORT=5000
+ENV FLASK_PORT=5001
 
 # Expose the default port, but this can be overridden
 EXPOSE ${FLASK_PORT}
