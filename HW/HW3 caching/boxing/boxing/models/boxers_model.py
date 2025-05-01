@@ -1,7 +1,8 @@
 import logging
+import time
 from typing import List
-
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import SQLAlchemyError
 
 from boxing.db import db
 from boxing.utils.logger import configure_logger
@@ -19,7 +20,24 @@ class Boxers(db.Model):
     age, and fight statistics. Used in a Flask-SQLAlchemy application to
     manage boxer data, run simulations, and track fight outcomes.
 
+    
     """
+    # TTL Cache: boxer_id -> (Boxers instance, expiration timestamp)
+    _boxer_cache = {}
+    # Name cache for lookups by name
+    _name_cache = {}
+    _cache_ttl_seconds = 300  # 5 minutes
+    __tablename__ = 'boxers'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String, unique=True, nullable=False)
+    weight = db.Column(db.Float, nullable=False)
+    height = db.Column(db.Float, nullable=False)
+    reach = db.Column(db.Float, nullable=False)
+    age = db.Column(db.Integer, nullable=False)
+    fights = db.Column(db.Integer, nullable=False, default=0)
+    wins = db.Column(db.Integer, nullable=False, default=0)
+    weight_class = db.Column(db.String)
 
     def __init__(self, name: str, weight: float, height: float, reach: float, age: int):
         """Initialize a new Boxer instance with basic attributes.
@@ -36,7 +54,16 @@ class Boxers(db.Model):
             - Fight statistics (`fights` and `wins`) are initialized to 0 by default in the database schema.
 
         """
-        pass
+        self.name = name
+        self.weight = weight
+        self.height = height
+        self.reach = reach
+        self.age = age
+        self.weight_class = self.get_weight_class(weight)
+        self.fights = 0
+        self.wins = 0
+
+
 
     @classmethod
     def get_weight_class(cls, weight: float) -> str:
@@ -58,7 +85,18 @@ class Boxers(db.Model):
             ValueError: If the weight is less than 125.
 
         """
-        pass
+        if weight >= 203:
+            weight_class = 'HEAVYWEIGHT'
+        elif weight >= 166:
+            weight_class = 'MIDDLEWEIGHT'
+        elif weight >= 133:
+            weight_class = 'LIGHTWEIGHT'
+        elif weight >= 125:
+            weight_class = 'FEATHERWEIGHT'
+        else:
+            raise ValueError(f"Invalid weight: {weight}. Weight must be at least 125.")
+
+        return weight_class
 
     @classmethod
     def create_boxer(cls, name: str, weight: float, height: float, reach: float, age: int) -> None:
@@ -80,30 +118,73 @@ class Boxers(db.Model):
         logger.info(f"Creating boxer: {name}, {weight=} {height=} {reach=} {age=}")
 
         try:
+            # Validate parameters before creating the boxer
+            if weight < 125:
+                raise ValueError("Weight must be at least 125 pounds.")
+            if height <= 0:
+                raise ValueError("Height must be greater than 0 inches.")
+            if reach <= 0:
+                raise ValueError("Reach must be greater than 0 inches.")
+            if not (18 <= age <= 40):
+                raise ValueError("Age must be between 18 and 40 years.")
+            
+            # Check for existing boxer with the same name
+            existing = cls.query.filter_by(name=name.strip()).first()
+            if existing:
+                raise ValueError(f"Boxer with name '{name}' already exists")
+            
+            # Create and add the boxer
+            boxer = cls(name=name.strip(), weight=weight, height=height, reach=reach, age=age)
+            db.session.add(boxer)
+            db.session.commit()
+            
             logger.info(f"Boxer created successfully: {name}")
+            return boxer
         except IntegrityError:
+            db.session.rollback()
             logger.error(f"Boxer with name '{name}' already exists.")
+            raise ValueError(f"Boxer with name '{name}' already exists")
         except SQLAlchemyError as e:
             db.session.rollback()
             logger.error(f"Database error during creation: {e}")
+            raise
 
     @classmethod
     def get_boxer_by_id(cls, boxer_id: int) -> "Boxers":
-        """Retrieve a boxer by ID.
-
+        """Retrieve a boxer by ID with caching.
+        
         Args:
             boxer_id: The ID of the boxer.
-
+            
         Returns:
             Boxer: The boxer instance.
-
+            
         Raises:
             ValueError: If the boxer with the given ID does not exist.
-
         """
+        now = time.time()
+        # Check if boxer is in cache and not expired
+        if boxer_id in cls._boxer_cache:
+            boxer, expires_at = cls._boxer_cache[boxer_id]
+            if now < expires_at:
+                logger.debug(f"Cache HIT for boxer ID {boxer_id}")
+                return boxer
+            else:
+                logger.debug(f"Cache EXPIRED for boxer ID {boxer_id}")
+                del cls._boxer_cache[boxer_id]
+        else:
+            logger.debug(f"Cache MISS for boxer ID {boxer_id}")
+
+        # Cache miss or expired, fetch from database
+        boxer = cls.query.get(boxer_id)
         if boxer is None:
             logger.info(f"Boxer with ID {boxer_id} not found.")
-        pass
+            raise ValueError(f"Boxer with ID {boxer_id} not found")
+        
+        # Update cache
+        cls._boxer_cache[boxer_id] = (boxer, now + cls._cache_ttl_seconds)
+        logger.debug(f"Boxer ID {boxer_id} loaded from DB and cached.")
+        return boxer
 
     @classmethod
     def get_boxer_by_name(cls, name: str) -> "Boxers":
@@ -119,9 +200,40 @@ class Boxers(db.Model):
             ValueError: If the boxer with the given name does not exist.
 
         """
+        # Normalize name
+        normalized_name = name.strip()
+        now = time.time()
+        
+        # Check name cache first
+        if normalized_name in cls._name_cache:
+            boxer_id, expires_at = cls._name_cache[normalized_name]
+            if now < expires_at:
+                # Name cache hit, now check boxer cache
+                if boxer_id in cls._boxer_cache:
+                    boxer, boxer_expires_at = cls._boxer_cache[boxer_id]
+                    if now < boxer_expires_at:
+                        logger.debug(f"Cache HIT for boxer name '{normalized_name}'")
+                        return boxer
+            
+            # Either name cache or boxer cache expired, remove entries
+            logger.debug(f"Cache EXPIRED for boxer name '{normalized_name}'")
+            cls._name_cache.pop(normalized_name, None)
+        else:
+            logger.debug(f"Cache MISS for boxer name '{normalized_name}'")
+        
+        # Cache miss or expired, fetch from database
+        boxer = cls.query.filter_by(name=normalized_name).first()
+        
         if boxer is None:
-            logger.info(f"Boxer '{name}' not found.")
-        pass
+            logger.info(f"Boxer '{normalized_name}' not found.")
+            raise ValueError(f"Boxer with name '{normalized_name}' not found")
+        
+        # Update both caches
+        cls._boxer_cache[boxer.id] = (boxer, now + cls._cache_ttl_seconds)
+        cls._name_cache[normalized_name] = (boxer.id, now + cls._cache_ttl_seconds)
+        logger.debug(f"Boxer name '{normalized_name}' loaded from DB and cached.")
+        
+        return boxer
 
     @classmethod
     def delete(cls, boxer_id: int) -> None:
@@ -134,10 +246,22 @@ class Boxers(db.Model):
             ValueError: If the boxer with the given ID does not exist.
 
         """
+        # Get the boxer first to ensure it exists
         boxer = cls.get_boxer_by_id(boxer_id)
-        if boxer is None:
-            logger.info(f"Boxer with ID {boxer_id} not found.")
-            raise ValueError(f"Boxer with ID {boxer_id} not found.")
+        
+        # Remove from both caches before deleting
+        if boxer_id in cls._boxer_cache:
+            del cls._boxer_cache[boxer_id]
+            logger.debug(f"Removed boxer ID {boxer_id} from cache during deletion")
+        
+        # Also clear any name cache entries that might reference this boxer
+        if hasattr(boxer, 'name'):
+            normalized_name = boxer.name.strip()
+            if normalized_name in cls._name_cache:
+                del cls._name_cache[normalized_name]
+                logger.debug(f"Removed boxer name '{normalized_name}' from cache during deletion")
+            
+        # Delete from database
         db.session.delete(boxer)
         db.session.commit()
         logger.info(f"Boxer with ID {boxer_id} permanently deleted.")
@@ -163,7 +287,14 @@ class Boxers(db.Model):
         if self.wins > self.fights:
             raise ValueError("Wins cannot exceed number of fights.")
 
+        # Commit changes to the database
         db.session.commit()
+        
+        # Invalidate cache for this boxer to ensure fresh data on next retrieval
+        if hasattr(self, 'id') and self.id in self.__class__._boxer_cache:
+            del self.__class__._boxer_cache[self.id]
+            logger.debug(f"Invalidated cache for boxer ID {self.id} after stats update")
+            
         logger.info(f"Updated stats for boxer {self.name}: {self.fights} fights, {self.wins} wins.")
 
     @staticmethod
@@ -207,3 +338,13 @@ class Boxers(db.Model):
         leaderboard.sort(key=lambda b: b[sort_by], reverse=True)
         logger.info("Leaderboard retrieved successfully.")
         return leaderboard
+
+    @classmethod
+    def clear_cache(cls) -> None:
+        """Clear all boxer caches.
+        
+        This is useful for testing or when you want to ensure fresh data.
+        """
+        cls._boxer_cache.clear()
+        cls._name_cache.clear()
+        logger.info("All boxer caches cleared")

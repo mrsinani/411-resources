@@ -3,9 +3,9 @@
 # Variables
 IMAGE_NAME="boxing"
 CONTAINER_TAG="1.0.0"
-HOST_PORT=5000
-CONTAINER_PORT=5000
-DB_VOLUME_PATH="./db"   # Adjust this to the desired host path for the database persistence
+HOST_PORT=5001
+CONTAINER_PORT=5001
+DB_DIR="./db"  # Path for database persistence
 BUILD=true  # Set this to true if you want to build the image
 
 # Check if we need to build the Docker image
@@ -17,9 +17,10 @@ else
 fi
 
 # Check if the database directory exists; if not, create it
-if [ ! -d "${DB_VOLUME_PATH}" ]; then
-  echo "Creating database directory at ${DB_VOLUME_PATH}..."
-  mkdir -p ${DB_VOLUME_PATH}
+if [ ! -d "${DB_DIR}" ]; then
+  echo "Creating database directory at ${DB_DIR}..."
+  mkdir -p ${DB_DIR}
+  chmod 777 ${DB_DIR}  # Ensure Docker can write to it
 fi
 
 # Stop and remove the running container if it exists
@@ -39,12 +40,18 @@ else
     echo "No running container named ${IMAGE_NAME}_container found."
 fi
 
+# Create DB directory on host if it doesn't exist
+mkdir -p "${DB_DIR}"
+chmod 777 "${DB_DIR}"
+
 # Run the Docker container with the necessary ports and volume mappings
 echo "Running Docker container..."
 docker run -d \
   --name ${IMAGE_NAME}_container \
-  --env-file .env \
   -p ${HOST_PORT}:${CONTAINER_PORT} \
+  -v "$(pwd)/${DB_DIR}:/app/db" \
+  -e "DOCKER_ENV=1" \
   ${IMAGE_NAME}:${CONTAINER_TAG}
 
 echo "Docker container is running on port ${HOST_PORT}."
+echo "Access the application at http://localhost:${HOST_PORT}"

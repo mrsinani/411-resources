@@ -19,11 +19,14 @@ RUN pip install -r requirements.txt
 # Install SQLite3
 RUN apt-get update && apt-get install -y sqlite3
 
+# Create necessary directories and set permissions
+RUN mkdir -p /app/db && chmod 777 /app/db
+
 # Define a volume for persisting the database
 VOLUME ["/app/db"]
 
-# Make port 5000 available to the world outside this container
-EXPOSE 5000
+# Make port 5001 available to the world outside this container
+EXPOSE 5001
 
 # Run the entrypoint script when the container launches
 CMD ["python", "app.py"]
