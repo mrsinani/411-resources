@@ -121,7 +121,14 @@
 - **Request Type:** POST  
 - **Purpose:** Adds a new car to the system.  
 - **Request Body:**  
-  - `make`, `model`, `year`, `horsepower`, `weight`, `zero_to_sixty`, `top_speed`, `handling`  
+  - `make` (String): car manufacturer
+  - `model` (String): car model
+  - `year` (Integer): year the car was produced
+  - `horsepower` (Integer): horsepower of the car
+  - `weight` (Float): weight of the car in pounds
+  - `zero_to_sixty` (Float): 0-60 mph time in seconds
+  - `top_speed` (Integer): top speed of car in miles per hour
+  - `handling` (Integer): handling rating from 1-10  
 - **Response Format:** JSON  
   - **Success Response Example:**  
     - Code: 201  
