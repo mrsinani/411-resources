@@ -16,7 +16,7 @@ class DevelopmentConfig(Config):
     DEBUG = True
 
 
-class TestingConfig(Config):
+class TestConfig(Config):
     """Testing configuration."""
     TESTING = True
     SQLALCHEMY_DATABASE_URI = os.getenv('TEST_DATABASE_URL', 'sqlite:///:memory:')
